@@ -21,8 +21,6 @@ func NewRedisDB(address string, db int) (*RedisDB, error) {
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:         opt.Addr,
-		Password:     opt.Password,
 		DB:           opt.DB,
 		DialTimeout:  5 * time.Second,
 		ReadTimeout:  3 * time.Second,
