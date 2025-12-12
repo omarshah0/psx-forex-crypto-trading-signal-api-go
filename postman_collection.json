@@ -1,0 +1,729 @@
+{
+	"info": {
+		"_postman_id": "rest-api-social-auth",
+		"name": "Go REST API with Social Auth",
+		"description": "Complete API collection for Go REST API with Social Authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check the health status of all services (PostgreSQL, MongoDB, Redis)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "OAuth - Code Exchange",
+			"item": [
+				{
+					"name": "Google - Exchange Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"YOUR_GOOGLE_AUTHORIZATION_CODE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/google/exchange",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"google",
+								"exchange"
+							]
+						},
+						"description": "Exchange Google authorization code for JWT tokens"
+					},
+					"response": []
+				},
+				{
+					"name": "Facebook - Exchange Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"YOUR_FACEBOOK_AUTHORIZATION_CODE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/facebook/exchange",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"facebook",
+								"exchange"
+							]
+						},
+						"description": "Exchange Facebook authorization code for JWT tokens"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "OAuth - SDK Verification",
+			"item": [
+				{
+					"name": "Google - Verify ID Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id_token\": \"YOUR_GOOGLE_ID_TOKEN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/google/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"google",
+								"verify"
+							]
+						},
+						"description": "Verify Google ID token from mobile SDK"
+					},
+					"response": []
+				},
+				{
+					"name": "Facebook - Verify Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"access_token\": \"YOUR_FACEBOOK_ACCESS_TOKEN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/facebook/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"facebook",
+								"verify"
+							]
+						},
+						"description": "Verify Facebook access token from mobile SDK"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Token Management",
+			"item": [
+				{
+					"name": "Refresh Token (with body)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save tokens to environment",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"        console.log(\"Tokens updated successfully\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh access token using refresh token (sent in request body)"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token (with cookie)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save tokens to environment",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.access_token) {",
+									"        pm.environment.set(\"access_token\", jsonData.data.access_token);",
+									"        pm.environment.set(\"refresh_token\", jsonData.data.refresh_token);",
+									"        console.log(\"Tokens updated successfully\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "refresh_token={{refresh_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh access token using refresh token (sent as cookie)"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user and revoke refresh token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						},
+						"description": "Get authenticated user's profile with linked accounts (email/password, Google, Facebook). Shows which authentication methods are linked to the account."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trading Signals",
+			"item": [
+				{
+					"name": "List All Trading Signals",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals?limit=50&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of results (max 100)"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Number of results to skip"
+								}
+							]
+						},
+						"description": "Get list of all trading signals with pagination. Accessible to all authenticated users."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Trading Signal",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Get a single trading signal by ID. Accessible to all authenticated users."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Trading Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"BTCUSDT\",\n    \"stop_loss_price\": 42000.50,\n    \"entry_price\": 43000.00,\n    \"take_profit_price\": 45000.00,\n    \"type\": \"LONG\",\n    \"result\": \"WIN\",\n    \"return\": 4.65\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals"
+							]
+						},
+						"description": "Create a new trading signal. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Trading Signal - LONG (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"ETHUSDT\",\n    \"stop_loss_price\": 2500.00,\n    \"entry_price\": 2600.00,\n    \"take_profit_price\": 2800.00,\n    \"type\": \"LONG\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals"
+							]
+						},
+						"description": "Create a LONG trading signal without result. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Trading Signal - SHORT (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"SOLUSDT\",\n    \"stop_loss_price\": 105.00,\n    \"entry_price\": 100.00,\n    \"take_profit_price\": 92.00,\n    \"type\": \"SHORT\",\n    \"result\": \"LOSS\",\n    \"return\": -5.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals"
+							]
+						},
+						"description": "Create a SHORT trading signal with LOSS result. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Trading Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"result\": \"WIN\",\n    \"return\": 7.55\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Update an existing trading signal. All fields are optional. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Trading Signal - Full (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"BTCUSDT\",\n    \"stop_loss_price\": 41000.00,\n    \"entry_price\": 42500.00,\n    \"take_profit_price\": 46000.00,\n    \"type\": \"LONG\",\n    \"result\": \"BREAKEVEN\",\n    \"return\": 0.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Update all fields of a trading signal. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Trading Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Delete a trading signal by ID. Admin only."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

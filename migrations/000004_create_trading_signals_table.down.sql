@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS trading_signals CASCADE;
+
