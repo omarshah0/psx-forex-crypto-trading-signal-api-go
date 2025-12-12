@@ -118,6 +118,13 @@ func (h *TradingSignalHandler) GetAllAdmin(w http.ResponseWriter, r *http.Reques
 
 // GetByID retrieves a single trading signal by ID
 func (h *TradingSignalHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context (user is authenticated by middleware)
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Authentication required")
+		return
+	}
+
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 
@@ -127,6 +134,20 @@ func (h *TradingSignalHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// CRITICAL: Check if user has access to this signal
+	// This prevents users from bypassing subscription by directly accessing signal IDs
+	hasAccess, err := h.service.CheckUserAccessToSignal(userID, id)
+	if err != nil {
+		utils.SendError(w, http.StatusNotFound, utils.ErrorTypeNotFound, "Trading signal not found")
+		return
+	}
+
+	if !hasAccess {
+		utils.SendError(w, http.StatusForbidden, utils.ErrorTypeForbidden, "You don't have access to this signal. Subscribe to the appropriate package to view this signal.")
+		return
+	}
+
+	// User has verified access, now retrieve the signal
 	signal, err := h.service.GetByID(id)
 	if err != nil {
 		utils.SendError(w, http.StatusNotFound, utils.ErrorTypeNotFound, "Trading signal not found")
