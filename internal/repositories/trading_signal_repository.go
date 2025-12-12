@@ -361,3 +361,31 @@ func (r *TradingSignalRepository) CountForUser(userID int64) (int64, error) {
 	}
 	return count, nil
 }
+
+// CheckUserAccess checks if a user has access to a specific signal
+func (r *TradingSignalRepository) CheckUserAccess(userID, signalID int64) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM trading_signals ts
+			WHERE ts.id = $2
+			AND (
+				ts.free_for_all = true
+				OR EXISTS (
+					SELECT 1 FROM user_subscriptions us
+					JOIN packages p ON us.package_id = p.id
+					WHERE us.user_id = $1
+					AND us.is_active = true
+					AND us.expires_at > CURRENT_TIMESTAMP
+					AND p.asset_class = ts.asset_class
+					AND p.duration_type = ts.duration_type
+				)
+			)
+		)
+	`
+	var hasAccess bool
+	err := r.db.QueryRow(query, userID, signalID).Scan(&hasAccess)
+	if err != nil {
+		return false, fmt.Errorf("failed to check user access: %w", err)
+	}
+	return hasAccess, nil
+}

@@ -59,7 +59,7 @@ func (s *SubscriptionService) Subscribe(userID int64, packageIDs []int64) (*mode
 
 	for _, pkg := range packages {
 		expiresAt := now.AddDate(0, 0, pkg.DurationDays)
-		
+
 		subscription, err := s.subscriptionRepo.Create(userID, pkg.ID, pkg.Price, expiresAt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create subscription: %w", err)
@@ -185,4 +185,3 @@ func (s *SubscriptionService) CountByUserID(userID int64) (int64, error) {
 func strPtr(s string) *string {
 	return &s
 }
-

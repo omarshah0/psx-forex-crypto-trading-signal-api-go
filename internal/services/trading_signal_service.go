@@ -89,3 +89,8 @@ func (s *TradingSignalService) GetSignalsForUser(userID int64, limit, offset int
 func (s *TradingSignalService) CountForUser(userID int64) (int64, error) {
 	return s.repo.CountForUser(userID)
 }
+
+// CheckUserAccessToSignal checks if a user has access to a specific signal
+func (s *TradingSignalService) CheckUserAccessToSignal(userID, signalID int64) (bool, error) {
+	return s.repo.CheckUserAccess(userID, signalID)
+}

@@ -237,15 +237,15 @@ func (s *ResendEmailService) SendWelcomeEmail(email, name string) error {
 
 func (s *ResendEmailService) SendSubscriptionConfirmation(email, name string, subscriptions []models.SubscriptionWithPackage, totalAmount float64) error {
 	subject := "Subscription Confirmation"
-	
+
 	var packagesHTML string
 	for _, sub := range subscriptions {
 		if sub.Package != nil {
-			packagesHTML += fmt.Sprintf("<li>%s - $%.2f (expires: %s)</li>", 
+			packagesHTML += fmt.Sprintf("<li>%s - $%.2f (expires: %s)</li>",
 				sub.Package.Name, sub.PricePaid, sub.ExpiresAt.Format("January 2, 2006"))
 		}
 	}
-	
+
 	body := fmt.Sprintf(`
 		<h2>Hi %s,</h2>
 		<p>Thank you for subscribing! Your subscription has been confirmed.</p>
@@ -391,15 +391,15 @@ func (s *SMTPEmailService) SendWelcomeEmail(email, name string) error {
 
 func (s *SMTPEmailService) SendSubscriptionConfirmation(email, name string, subscriptions []models.SubscriptionWithPackage, totalAmount float64) error {
 	subject := "Subscription Confirmation"
-	
+
 	var packagesHTML string
 	for _, sub := range subscriptions {
 		if sub.Package != nil {
-			packagesHTML += fmt.Sprintf("<li>%s - $%.2f (expires: %s)</li>", 
+			packagesHTML += fmt.Sprintf("<li>%s - $%.2f (expires: %s)</li>",
 				sub.Package.Name, sub.PricePaid, sub.ExpiresAt.Format("January 2, 2006"))
 		}
 	}
-	
+
 	body := fmt.Sprintf(`
 		<h2>Hi %s,</h2>
 		<p>Thank you for subscribing! Your subscription has been confirmed.</p>
