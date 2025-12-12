@@ -30,13 +30,16 @@ func NewAuthHandler(authService *services.AuthService, oauthService *services.OA
 // Refresh token handler
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var refreshToken string
+	var deviceType string
 
-	// Try to get refresh token from request body
+	// Try to get refresh token and device type from request body
 	var body struct {
 		RefreshToken string `json:"refresh_token"`
+		DeviceType   string `json:"device_type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err == nil && body.RefreshToken != "" {
 		refreshToken = body.RefreshToken
+		deviceType = body.DeviceType
 	}
 
 	// If not in body, try cookie
@@ -49,8 +52,18 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		refreshToken = cookie.Value
 	}
 
+	// Validate device type
+	if deviceType == "" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "device_type is required")
+		return
+	}
+	if deviceType != "web" && deviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
+		return
+	}
+
 	// Refresh tokens
-	authResponse, err := h.authService.RefreshTokens(refreshToken)
+	authResponse, err := h.authService.RefreshTokens(refreshToken, models.DeviceType(deviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Invalid or expired refresh token")
 		return
@@ -71,8 +84,27 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Logout user (revoke refresh token)
-	if err := h.authService.Logout(userID); err != nil {
+	// Get device type from request body
+	var body struct {
+		DeviceType string `json:"device_type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate device type
+	if body.DeviceType == "" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "device_type is required")
+		return
+	}
+	if body.DeviceType != "web" && body.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
+		return
+	}
+
+	// Logout user (revoke refresh token for specific device)
+	if err := h.authService.Logout(userID, models.DeviceType(body.DeviceType)); err != nil {
 		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Failed to logout")
 		return
 	}
@@ -81,6 +113,27 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	h.clearAuthCookies(w)
 
 	utils.SendSuccess(w, http.StatusOK, utils.ResponseTypeAction, nil, "Logged out successfully")
+}
+
+// LogoutAll logs out a user from all devices
+func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Authentication required")
+		return
+	}
+
+	// Logout user from all devices (revoke all refresh tokens)
+	if err := h.authService.LogoutFromAllDevices(userID); err != nil {
+		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Failed to logout")
+		return
+	}
+
+	// Clear cookies
+	h.clearAuthCookies(w)
+
+	utils.SendSuccess(w, http.StatusOK, utils.ResponseTypeAction, nil, "Logged out from all devices successfully")
 }
 
 // Helper functions
@@ -134,7 +187,8 @@ func (h *AuthHandler) clearAuthCookies(w http.ResponseWriter) {
 // VerifyGoogleIDToken verifies Google ID token (for React Native/Expo)
 func (h *AuthHandler) VerifyGoogleIDToken(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		IDToken string `json:"id_token" validate:"required"`
+		IDToken    string `json:"id_token" validate:"required"`
+		DeviceType string `json:"device_type" validate:"required"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -144,6 +198,12 @@ func (h *AuthHandler) VerifyGoogleIDToken(w http.ResponseWriter, r *http.Request
 
 	if err := utils.ValidateStruct(req); err != nil {
 		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeValidation, err.Error())
+		return
+	}
+
+	// Validate device type
+	if req.DeviceType != "web" && req.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
 		return
 	}
 
@@ -198,7 +258,7 @@ func (h *AuthHandler) VerifyGoogleIDToken(w http.ResponseWriter, r *http.Request
 	}
 
 	// Create or login user using the same OAuth flow
-	authResponse, err := h.authService.AuthenticateWithOAuthUserInfo(r.Context(), models.ProviderGoogle, userInfo)
+	authResponse, err := h.authService.AuthenticateWithOAuthUserInfo(r.Context(), models.ProviderGoogle, userInfo, models.DeviceType(req.DeviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Authentication failed")
 		return
@@ -211,6 +271,7 @@ func (h *AuthHandler) VerifyGoogleIDToken(w http.ResponseWriter, r *http.Request
 func (h *AuthHandler) VerifyFacebookAccessToken(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		AccessToken string `json:"access_token" validate:"required"`
+		DeviceType  string `json:"device_type" validate:"required"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -220,6 +281,12 @@ func (h *AuthHandler) VerifyFacebookAccessToken(w http.ResponseWriter, r *http.R
 
 	if err := utils.ValidateStruct(req); err != nil {
 		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeValidation, err.Error())
+		return
+	}
+
+	// Validate device type
+	if req.DeviceType != "web" && req.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
 		return
 	}
 
@@ -268,7 +335,7 @@ func (h *AuthHandler) VerifyFacebookAccessToken(w http.ResponseWriter, r *http.R
 	}
 
 	// Create or login user using the same OAuth flow
-	authResponse, err := h.authService.AuthenticateWithOAuthUserInfo(r.Context(), models.ProviderFacebook, &userInfo)
+	authResponse, err := h.authService.AuthenticateWithOAuthUserInfo(r.Context(), models.ProviderFacebook, &userInfo, models.DeviceType(req.DeviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Authentication failed")
 		return
@@ -285,7 +352,8 @@ func (h *AuthHandler) ExchangeGoogleCode(w http.ResponseWriter, r *http.Request)
 	}
 
 	var req struct {
-		Code string `json:"code" validate:"required"`
+		Code       string `json:"code" validate:"required"`
+		DeviceType string `json:"device_type" validate:"required"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -298,8 +366,14 @@ func (h *AuthHandler) ExchangeGoogleCode(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Validate device type
+	if req.DeviceType != "web" && req.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
+		return
+	}
+
 	// Authenticate with OAuth using the authorization code
-	authResponse, err := h.authService.AuthenticateWithOAuth(r.Context(), models.ProviderGoogle, req.Code)
+	authResponse, err := h.authService.AuthenticateWithOAuth(r.Context(), models.ProviderGoogle, req.Code, models.DeviceType(req.DeviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Authentication failed: "+err.Error())
 		return
@@ -316,7 +390,8 @@ func (h *AuthHandler) ExchangeFacebookCode(w http.ResponseWriter, r *http.Reques
 	}
 
 	var req struct {
-		Code string `json:"code" validate:"required"`
+		Code       string `json:"code" validate:"required"`
+		DeviceType string `json:"device_type" validate:"required"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -329,8 +404,14 @@ func (h *AuthHandler) ExchangeFacebookCode(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Validate device type
+	if req.DeviceType != "web" && req.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
+		return
+	}
+
 	// Authenticate with OAuth using the authorization code
-	authResponse, err := h.authService.AuthenticateWithOAuth(r.Context(), models.ProviderFacebook, req.Code)
+	authResponse, err := h.authService.AuthenticateWithOAuth(r.Context(), models.ProviderFacebook, req.Code, models.DeviceType(req.DeviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Authentication failed: "+err.Error())
 		return

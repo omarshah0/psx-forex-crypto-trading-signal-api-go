@@ -8,6 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/omarshah0/rest-api-with-social-auth/internal/config"
 	"github.com/omarshah0/rest-api-with-social-auth/internal/database"
+	"github.com/omarshah0/rest-api-with-social-auth/internal/models"
 )
 
 type JWTService struct {
@@ -44,8 +45,8 @@ func (s *JWTService) GenerateAccessToken(userID int64, email string) (string, er
 	return token.SignedString([]byte(s.config.AccessSecret))
 }
 
-// GenerateRefreshToken generates a new refresh token and stores it in Redis
-func (s *JWTService) GenerateRefreshToken(userID int64, email string) (string, error) {
+// GenerateRefreshToken generates a new refresh token and stores it in Redis with device type
+func (s *JWTService) GenerateRefreshToken(userID int64, email string, deviceType models.DeviceType) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		Email:  email,
@@ -62,9 +63,9 @@ func (s *JWTService) GenerateRefreshToken(userID int64, email string) (string, e
 		return "", err
 	}
 
-	// Store refresh token in Redis
+	// Store refresh token in Redis with device type
 	ctx := context.Background()
-	key := fmt.Sprintf("refresh_token:%d", userID)
+	key := fmt.Sprintf("refresh_token:%d:%s", userID, deviceType)
 	err = s.redisDB.Set(ctx, key, tokenString, s.config.RefreshExpiry)
 	if err != nil {
 		return "", fmt.Errorf("failed to store refresh token: %w", err)
@@ -94,7 +95,7 @@ func (s *JWTService) ValidateAccessToken(tokenString string) (*Claims, error) {
 }
 
 // ValidateRefreshToken validates a refresh token and returns the claims
-func (s *JWTService) ValidateRefreshToken(tokenString string) (*Claims, error) {
+func (s *JWTService) ValidateRefreshToken(tokenString string, deviceType models.DeviceType) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -107,9 +108,9 @@ func (s *JWTService) ValidateRefreshToken(tokenString string) (*Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		// Verify token exists in Redis
+		// Verify token exists in Redis for the specific device type
 		ctx := context.Background()
-		key := fmt.Sprintf("refresh_token:%d", claims.UserID)
+		key := fmt.Sprintf("refresh_token:%d:%s", claims.UserID, deviceType)
 		storedToken, err := s.redisDB.Get(ctx, key)
 		if err != nil || storedToken != tokenString {
 			return nil, fmt.Errorf("invalid or expired refresh token")
@@ -120,22 +121,42 @@ func (s *JWTService) ValidateRefreshToken(tokenString string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
-// RevokeRefreshToken revokes a refresh token by removing it from Redis
-func (s *JWTService) RevokeRefreshToken(userID int64) error {
+// RevokeRefreshToken revokes a refresh token for a specific device by removing it from Redis
+func (s *JWTService) RevokeRefreshToken(userID int64, deviceType models.DeviceType) error {
 	ctx := context.Background()
-	key := fmt.Sprintf("refresh_token:%d", userID)
+	key := fmt.Sprintf("refresh_token:%d:%s", userID, deviceType)
 	return s.redisDB.Delete(ctx, key)
 }
 
-// RefreshTokens generates new access and refresh tokens
-func (s *JWTService) RefreshTokens(refreshToken string) (string, string, error) {
-	claims, err := s.ValidateRefreshToken(refreshToken)
+// RevokeAllRefreshTokens revokes all refresh tokens for a user (all devices)
+func (s *JWTService) RevokeAllRefreshTokens(userID int64) error {
+	ctx := context.Background()
+	
+	// Delete both web and mobile tokens
+	keyWeb := fmt.Sprintf("refresh_token:%d:web", userID)
+	keyMobile := fmt.Sprintf("refresh_token:%d:mobile", userID)
+	
+	// Try to delete both, but don't fail if one doesn't exist
+	errWeb := s.redisDB.Delete(ctx, keyWeb)
+	errMobile := s.redisDB.Delete(ctx, keyMobile)
+	
+	// Return error only if both deletions failed
+	if errWeb != nil && errMobile != nil {
+		return fmt.Errorf("failed to revoke tokens: web error: %v, mobile error: %v", errWeb, errMobile)
+	}
+	
+	return nil
+}
+
+// RefreshTokens generates new access and refresh tokens for a specific device
+func (s *JWTService) RefreshTokens(refreshToken string, deviceType models.DeviceType) (string, string, error) {
+	claims, err := s.ValidateRefreshToken(refreshToken, deviceType)
 	if err != nil {
 		return "", "", err
 	}
 
-	// Revoke old refresh token
-	if err := s.RevokeRefreshToken(claims.UserID); err != nil {
+	// Revoke old refresh token for this device
+	if err := s.RevokeRefreshToken(claims.UserID, deviceType); err != nil {
 		return "", "", fmt.Errorf("failed to revoke old refresh token: %w", err)
 	}
 
@@ -145,7 +166,7 @@ func (s *JWTService) RefreshTokens(refreshToken string) (string, string, error) 
 		return "", "", fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	newRefreshToken, err := s.GenerateRefreshToken(claims.UserID, claims.Email)
+	newRefreshToken, err := s.GenerateRefreshToken(claims.UserID, claims.Email, deviceType)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}

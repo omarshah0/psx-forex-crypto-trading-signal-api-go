@@ -160,9 +160,14 @@ Exchange Google authorization code for JWT tokens.
 **Request Body:**
 ```json
 {
-  "code": "4/0AX4XfWh..."
+  "code": "4/0AX4XfWh...",
+  "device_type": "web"
 }
 ```
+
+**Fields:**
+- `code` (required): Google authorization code
+- `device_type` (required): Device type, must be either "web" or "mobile"
 
 **Response:**
 ```json
@@ -203,9 +208,14 @@ Exchange Facebook authorization code for JWT tokens.
 **Request Body:**
 ```json
 {
-  "code": "AQB..."
+  "code": "AQB...",
+  "device_type": "web"
 }
 ```
+
+**Fields:**
+- `code` (required): Facebook authorization code
+- `device_type` (required): Device type, must be either "web" or "mobile"
 
 **Response:** Same format as Google exchange
 
@@ -228,9 +238,14 @@ Verify Google ID token from mobile SDK.
 **Request Body:**
 ```json
 {
-  "id_token": "eyJhbGciOiJSUzI1NiIs..."
+  "id_token": "eyJhbGciOiJSUzI1NiIs...",
+  "device_type": "mobile"
 }
 ```
+
+**Fields:**
+- `id_token` (required): Google ID token from mobile SDK
+- `device_type` (required): Device type, must be either "web" or "mobile"
 
 **Response:** Same format as code exchange endpoints
 
@@ -248,9 +263,14 @@ Verify Facebook access token from mobile SDK.
 **Request Body:**
 ```json
 {
-  "access_token": "EAAG..."
+  "access_token": "EAAG...",
+  "device_type": "mobile"
 }
 ```
+
+**Fields:**
+- `access_token` (required): Facebook access token from mobile SDK
+- `device_type` (required): Device type, must be either "web" or "mobile"
 
 **Response:** Same format as code exchange endpoints
 
@@ -263,16 +283,21 @@ Verify Facebook access token from mobile SDK.
 ### Refresh Token
 
 #### POST /auth/refresh
-Refresh the access token using a valid refresh token.
+Refresh the access token using a valid refresh token for a specific device.
 
 **Authentication:** Refresh token required (cookie or body)
 
-**Request Body (optional if using cookie):**
+**Request Body:**
 ```json
 {
-  "refresh_token": "eyJhbGciOiJIUzI1NiIs..."
+  "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
+  "device_type": "web"
 }
 ```
+
+**Fields:**
+- `refresh_token` (optional if using cookie): The refresh token to validate
+- `device_type` (required): Device type, must be either "web" or "mobile"
 
 **Response:**
 ```json
@@ -305,7 +330,40 @@ Refresh the access token using a valid refresh token.
 ### Logout
 
 #### POST /auth/logout
-Logout the current user by revoking their refresh token.
+Logout the current user from a specific device by revoking their refresh token for that device.
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "device_type": "web"
+}
+```
+
+**Fields:**
+- `device_type` (required): Device type to logout from, must be either "web" or "mobile"
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "action",
+  "data": null,
+  "message": "Logged out successfully"
+}
+```
+
+**Cookies Cleared:**
+- `access_token`
+- `refresh_token`
+
+---
+
+### Logout from All Devices
+
+#### POST /auth/logout-all
+Logout the current user from all devices by revoking all refresh tokens (both web and mobile).
 
 **Authentication:** Required
 
@@ -315,7 +373,7 @@ Logout the current user by revoking their refresh token.
   "status": "success",
   "type": "action",
   "data": null,
-  "message": "Logged out successfully"
+  "message": "Logged out from all devices successfully"
 }
 ```
 

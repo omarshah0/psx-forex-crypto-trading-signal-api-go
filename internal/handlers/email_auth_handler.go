@@ -58,7 +58,10 @@ func (h *EmailAuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login handles user login with email/password
 func (h *EmailAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var req models.UserLogin
+	var req struct {
+		models.UserLogin
+		DeviceType string `json:"device_type" validate:"required"`
+	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid request body")
 		return
@@ -70,8 +73,14 @@ func (h *EmailAuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate device type
+	if req.DeviceType != "web" && req.DeviceType != "mobile" {
+		utils.SendError(w, http.StatusBadRequest, utils.ErrorTypeBadRequest, "Invalid device_type. Must be 'web' or 'mobile'")
+		return
+	}
+
 	// Authenticate user
-	authResponse, err := h.authService.Login(r.Context(), &req)
+	authResponse, err := h.authService.Login(r.Context(), &req.UserLogin, models.DeviceType(req.DeviceType))
 	if err != nil {
 		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Invalid email or password")
 		return

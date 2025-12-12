@@ -424,14 +424,17 @@ POST /api/subscriptions
 ### Authentication Endpoints
 
 - `POST /auth/register` - Email/password registration
-- `POST /auth/login` - Email/password login
+- `POST /auth/login` - Email/password login (requires `device_type`)
 - `GET /auth/verify-email` - Email verification
 - `POST /auth/forgot-password` - Request password reset
 - `POST /auth/reset-password` - Reset password with token
-- `POST /auth/google/exchange` - Google OAuth code exchange
-- `POST /auth/facebook/exchange` - Facebook OAuth code exchange
-- `POST /auth/refresh` - Refresh access token
-- `POST /auth/logout` - Logout (requires auth)
+- `POST /auth/google/exchange` - Google OAuth code exchange (requires `device_type`)
+- `POST /auth/facebook/exchange` - Facebook OAuth code exchange (requires `device_type`)
+- `POST /auth/google/verify` - Verify Google ID token (requires `device_type`)
+- `POST /auth/facebook/verify` - Verify Facebook access token (requires `device_type`)
+- `POST /auth/refresh` - Refresh access token (requires `device_type`)
+- `POST /auth/logout` - Logout from specific device (requires `device_type` and auth)
+- `POST /auth/logout-all` - Logout from all devices (requires auth)
 
 ### User Endpoints (Authenticated)
 
@@ -482,10 +485,37 @@ See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for complete API reference.
 - Expired subscriptions automatically lose access
 
 ### Authentication & Authorization
-- JWT tokens with Redis blacklisting
+- JWT tokens with per-device refresh token rotation
 - Role-based access control (User/Admin)
 - Email verification for password auth
 - OAuth profile sync with picture import
+- Per-device session management (web and mobile)
+
+### Per-Device Session Management
+
+The application supports simultaneous sessions on different device types (web and mobile), allowing users to be logged in on both their browser and mobile app at the same time without conflicts.
+
+**How it works:**
+- Each authentication request requires a `device_type` parameter (`"web"` or `"mobile"`)
+- Refresh tokens are stored separately per device in Redis: `refresh_token:{userID}:{deviceType}`
+- Users can maintain one active session per device type
+- Logging in on the same device type replaces the previous session for that device
+- Token rotation occurs independently for each device
+
+**Device-specific operations:**
+- **Login/OAuth:** Include `device_type` in the request body
+- **Refresh Token:** Include `device_type` to refresh tokens for that specific device
+- **Logout:** Include `device_type` to logout from a specific device only
+- **Logout All:** Revokes tokens for all devices simultaneously
+
+**Example scenarios:**
+- User logs in on web → Creates `refresh_token:123:web`
+- Same user logs in on mobile → Creates `refresh_token:123:mobile` (web session unaffected)
+- User refreshes token on web → Rotates only `refresh_token:123:web`
+- User logs out from web → Removes only `refresh_token:123:web` (mobile session continues)
+- User logs out from all devices → Removes both `refresh_token:123:web` and `refresh_token:123:mobile`
+
+See [SUBSCRIPTION_GUIDE.md](SUBSCRIPTION_GUIDE.md) for details on subscription-based access control.
 
 ### Data Protection
 - Sensitive data masking in logs

@@ -148,6 +148,7 @@ func main() {
 	// Token endpoints
 	authRouter.HandleFunc("/refresh", authHandler.Refresh).Methods("POST")
 	authRouter.Handle("/logout", authMiddleware.Authenticate(http.HandlerFunc(authHandler.Logout))).Methods("POST")
+	authRouter.Handle("/logout-all", authMiddleware.Authenticate(http.HandlerFunc(authHandler.LogoutAll))).Methods("POST")
 
 	// Code Exchange endpoints (for React Web & React Native with code flow)
 	authRouter.HandleFunc("/google/exchange", authHandler.ExchangeGoogleCode).Methods("POST")

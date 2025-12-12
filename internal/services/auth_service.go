@@ -47,7 +47,7 @@ type AuthResponse struct {
 }
 
 // AuthenticateWithOAuth authenticates or creates a user via OAuth
-func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, provider models.OAuthProviderType, code string) (*AuthResponse, error) {
+func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, provider models.OAuthProviderType, code string, deviceType models.DeviceType) (*AuthResponse, error) {
 	var userInfo *OAuthUserInfo
 	var err error
 
@@ -155,7 +155,7 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, provider models
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email, deviceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
@@ -169,8 +169,8 @@ func (s *AuthService) AuthenticateWithOAuth(ctx context.Context, provider models
 }
 
 // RefreshTokens refreshes the access and refresh tokens
-func (s *AuthService) RefreshTokens(refreshToken string) (*AuthResponse, error) {
-	accessToken, newRefreshToken, err := s.jwtService.RefreshTokens(refreshToken)
+func (s *AuthService) RefreshTokens(refreshToken string, deviceType models.DeviceType) (*AuthResponse, error) {
+	accessToken, newRefreshToken, err := s.jwtService.RefreshTokens(refreshToken, deviceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to refresh tokens: %w", err)
 	}
@@ -209,13 +209,18 @@ func (s *AuthService) RefreshTokens(refreshToken string) (*AuthResponse, error) 
 	}, nil
 }
 
-// Logout logs out a user by revoking their refresh token
-func (s *AuthService) Logout(userID int64) error {
-	return s.jwtService.RevokeRefreshToken(userID)
+// Logout logs out a user from a specific device by revoking their refresh token
+func (s *AuthService) Logout(userID int64, deviceType models.DeviceType) error {
+	return s.jwtService.RevokeRefreshToken(userID, deviceType)
+}
+
+// LogoutFromAllDevices logs out a user from all devices by revoking all refresh tokens
+func (s *AuthService) LogoutFromAllDevices(userID int64) error {
+	return s.jwtService.RevokeAllRefreshTokens(userID)
 }
 
 // AuthenticateWithOAuthUserInfo authenticates or creates a user with OAuthUserInfo (for mobile ID token verification)
-func (s *AuthService) AuthenticateWithOAuthUserInfo(ctx context.Context, provider models.OAuthProviderType, userInfo *OAuthUserInfo) (*AuthResponse, error) {
+func (s *AuthService) AuthenticateWithOAuthUserInfo(ctx context.Context, provider models.OAuthProviderType, userInfo *OAuthUserInfo, deviceType models.DeviceType) (*AuthResponse, error) {
 	// Check if OAuth provider is already linked
 	oauthProvider, err := s.oauthRepo.GetByProviderAndUserID(provider, userInfo.ID)
 	if err != nil {
@@ -276,39 +281,39 @@ func (s *AuthService) AuthenticateWithOAuthUserInfo(ctx context.Context, provide
 
 		// Link OAuth provider to user
 		_, err = s.oauthRepo.Create(user.ID, provider, userInfo.ID, userInfo.Email)
-		if err != nil {
-			return nil, fmt.Errorf("failed to link oauth provider: %w", err)
-		}
-	}
-
-	// Check if user is blocked
-	if user.Blocked {
-		return nil, fmt.Errorf("user account is blocked")
-	}
-
-	// Check if user is admin
-	isAdmin, err := s.adminRepo.IsAdmin(user.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check admin status: %w", err)
+		return nil, fmt.Errorf("failed to link oauth provider: %w", err)
 	}
+}
 
-	// Generate tokens
-	accessToken, err := s.jwtService.GenerateAccessToken(user.ID, user.Email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate access token: %w", err)
-	}
+// Check if user is blocked
+if user.Blocked {
+	return nil, fmt.Errorf("user account is blocked")
+}
 
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
-	}
+// Check if user is admin
+isAdmin, err := s.adminRepo.IsAdmin(user.ID)
+if err != nil {
+	return nil, fmt.Errorf("failed to check admin status: %w", err)
+}
 
-	return &AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		IsAdmin:      isAdmin,
-	}, nil
+// Generate tokens
+accessToken, err := s.jwtService.GenerateAccessToken(user.ID, user.Email)
+if err != nil {
+	return nil, fmt.Errorf("failed to generate access token: %w", err)
+}
+
+refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email, deviceType)
+if err != nil {
+	return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+}
+
+return &AuthResponse{
+	User:         user,
+	AccessToken:  accessToken,
+	RefreshToken: refreshToken,
+	IsAdmin:      isAdmin,
+}, nil
 }
 
 // Register registers a new user with email and password
@@ -358,7 +363,7 @@ func (s *AuthService) Register(ctx context.Context, req *models.UserRegister) (*
 }
 
 // Login authenticates a user with email and password
-func (s *AuthService) Login(ctx context.Context, req *models.UserLogin) (*AuthResponse, error) {
+func (s *AuthService) Login(ctx context.Context, req *models.UserLogin, deviceType models.DeviceType) (*AuthResponse, error) {
 	// Get user with password
 	user, err := s.userRepo.GetByEmailWithPassword(req.Email)
 	if err != nil {
@@ -396,7 +401,7 @@ func (s *AuthService) Login(ctx context.Context, req *models.UserLogin) (*AuthRe
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email)
+	refreshToken, err := s.jwtService.GenerateRefreshToken(user.ID, user.Email, deviceType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
@@ -478,7 +483,7 @@ func (s *AuthService) ResetPassword(ctx context.Context, req *models.ResetPasswo
 	}
 
 	// Revoke all refresh tokens (force logout from all devices)
-	err = s.jwtService.RevokeRefreshToken(user.ID)
+	err = s.jwtService.RevokeAllRefreshTokens(user.ID)
 	if err != nil {
 		// Log but don't fail
 		fmt.Printf("Failed to revoke refresh tokens: %v\n", err)
@@ -533,7 +538,7 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID int64, req *mod
 	}
 
 	// Revoke all refresh tokens (force logout from all devices)
-	err = s.jwtService.RevokeRefreshToken(userID)
+	err = s.jwtService.RevokeAllRefreshTokens(userID)
 	if err != nil {
 		// Log but don't fail
 		fmt.Printf("Failed to revoke refresh tokens: %v\n", err)

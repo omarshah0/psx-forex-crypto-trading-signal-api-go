@@ -59,22 +59,22 @@
 								"value": "application/json"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"code\": \"YOUR_GOOGLE_AUTHORIZATION_CODE\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/google/exchange",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"google",
-								"exchange"
-							]
-						},
-						"description": "Exchange Google authorization code for JWT tokens"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"code\": \"YOUR_GOOGLE_AUTHORIZATION_CODE\",\n    \"device_type\": \"web\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/google/exchange",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"google",
+							"exchange"
+						]
+					},
+					"description": "Exchange Google authorization code for JWT tokens with device type"
 					},
 					"response": []
 				},
@@ -105,22 +105,22 @@
 								"value": "application/json"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"code\": \"YOUR_FACEBOOK_AUTHORIZATION_CODE\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/facebook/exchange",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"facebook",
-								"exchange"
-							]
-						},
-						"description": "Exchange Facebook authorization code for JWT tokens"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"code\": \"YOUR_FACEBOOK_AUTHORIZATION_CODE\",\n    \"device_type\": \"web\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/facebook/exchange",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"facebook",
+							"exchange"
+						]
+					},
+					"description": "Exchange Facebook authorization code for JWT tokens with device type"
 					},
 					"response": []
 				}
@@ -156,22 +156,22 @@
 								"value": "application/json"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"id_token\": \"YOUR_GOOGLE_ID_TOKEN\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/google/verify",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"google",
-								"verify"
-							]
-						},
-						"description": "Verify Google ID token from mobile SDK"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"id_token\": \"YOUR_GOOGLE_ID_TOKEN\",\n    \"device_type\": \"mobile\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/google/verify",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"google",
+							"verify"
+						]
+					},
+					"description": "Verify Google ID token from mobile SDK with device type"
 					},
 					"response": []
 				},
@@ -202,22 +202,22 @@
 								"value": "application/json"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"access_token\": \"YOUR_FACEBOOK_ACCESS_TOKEN\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/facebook/verify",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"facebook",
-								"verify"
-							]
-						},
-						"description": "Verify Facebook access token from mobile SDK"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"access_token\": \"YOUR_FACEBOOK_ACCESS_TOKEN\",\n    \"device_type\": \"mobile\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/facebook/verify",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"facebook",
+							"verify"
+						]
+					},
+					"description": "Verify Facebook access token from mobile SDK with device type"
 					},
 					"response": []
 				}
@@ -255,21 +255,21 @@
 								"value": "application/json"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/refresh",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"refresh"
-							]
-						},
-						"description": "Refresh access token using refresh token (sent in request body)"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\",\n    \"device_type\": \"web\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/refresh",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"refresh"
+						]
+					},
+					"description": "Refresh access token using refresh token (sent in request body) for a specific device"
 					},
 					"response": []
 				},
@@ -306,53 +306,91 @@
 								"value": "refresh_token={{refresh_token}}"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/refresh",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"refresh"
-							]
-						},
-						"description": "Refresh access token using refresh token (sent as cookie)"
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"device_type\": \"web\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/refresh",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"refresh"
+						]
+					},
+					"description": "Refresh access token using refresh token (sent as cookie) for a specific device"
 					},
 					"response": []
 				},
-				{
-					"name": "Logout",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
-						},
-						"description": "Logout current user and revoke refresh token"
+			{
+				"name": "Logout",
+				"request": {
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{access_token}}",
+								"type": "string"
+							}
+						]
 					},
-					"response": []
-				}
+					"method": "POST",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": {
+						"mode": "raw",
+						"raw": "{\n    \"device_type\": \"web\"\n}"
+					},
+					"url": {
+						"raw": "{{base_url}}/auth/logout",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"logout"
+						]
+					},
+					"description": "Logout current user from a specific device and revoke refresh token for that device"
+				},
+				"response": []
+			},
+			{
+				"name": "Logout from All Devices",
+				"request": {
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{access_token}}",
+								"type": "string"
+							}
+						]
+					},
+					"method": "POST",
+					"header": [],
+					"url": {
+						"raw": "{{base_url}}/auth/logout-all",
+						"host": [
+							"{{base_url}}"
+						],
+						"path": [
+							"auth",
+							"logout-all"
+						]
+					},
+					"description": "Logout current user from all devices and revoke all refresh tokens"
+				},
+				"response": []
+			}
 			]
 		},
 		{
