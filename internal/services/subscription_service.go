@@ -57,7 +57,8 @@ func (s *SubscriptionService) Subscribe(userID int64, packageIDs []int64) (*mode
 	var subscriptions []models.SubscriptionWithPackage
 	now := time.Now()
 
-	for _, pkg := range packages {
+	for i := range packages {
+		pkg := packages[i] // Create a copy of the package for this iteration
 		expiresAt := now.AddDate(0, 0, pkg.DurationDays)
 
 		subscription, err := s.subscriptionRepo.Create(userID, pkg.ID, pkg.Price, expiresAt)
@@ -72,7 +73,7 @@ func (s *SubscriptionService) Subscribe(userID int64, packageIDs []int64) (*mode
 			Amount:        pkg.Price,
 			PaymentMethod: strPtr("dummy"),
 			PaymentStatus: models.PaymentStatusCompleted,
-			TransactionID: strPtr(fmt.Sprintf("dummy-%d-%d", userID, time.Now().Unix())),
+			TransactionID: strPtr(fmt.Sprintf("dummy-%d-%d-%d", userID, time.Now().UnixNano(), i)),
 			Metadata:      map[string]interface{}{"note": "Dummy payment for development"},
 		}
 
