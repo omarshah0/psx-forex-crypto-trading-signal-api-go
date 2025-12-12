@@ -50,6 +50,10 @@ model trading_signals {
   created_by        Int
   created_at        DateTime? @default(now()) @db.Timestamp(6)
   updated_at        DateTime? @default(now()) @db.Timestamp(6)
+  asset_class       String?   @db.VarChar(20)
+  duration_type     String?   @db.VarChar(20)
+  free_for_all      Boolean?  @default(false)
+  comments          String?
   users             users     @relation(fields: [created_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([created_at(sort: Desc)], map: "idx_trading_signals_created_at")
@@ -57,29 +61,99 @@ model trading_signals {
   @@index([result], map: "idx_trading_signals_result")
   @@index([symbol], map: "idx_trading_signals_symbol")
   @@index([type], map: "idx_trading_signals_type")
+  @@index([asset_class], map: "idx_trading_signals_asset_class")
+  @@index([duration_type], map: "idx_trading_signals_duration_type")
+  @@index([free_for_all], map: "idx_trading_signals_free_for_all")
 }
 
 model users {
-  id                         Int               @id @default(autoincrement())
-  email                      String            @unique @db.VarChar(255)
-  name                       String            @db.VarChar(255)
-  blocked                    Boolean?          @default(false)
-  created_at                 DateTime?         @default(now()) @db.Timestamp(6)
-  updated_at                 DateTime?         @default(now()) @db.Timestamp(6)
-  hashed_password            String?           @db.VarChar(255)
-  email_verified             Boolean?          @default(false)
-  verification_token         String?           @db.VarChar(255)
-  verification_token_expires DateTime?         @db.Timestamp(6)
-  reset_token                String?           @db.VarChar(255)
-  reset_token_expires        DateTime?         @db.Timestamp(6)
-  profile_picture            String?           @db.VarChar(1000)
+  id                         Int                  @id @default(autoincrement())
+  email                      String               @unique @db.VarChar(255)
+  name                       String               @db.VarChar(255)
+  blocked                    Boolean?             @default(false)
+  created_at                 DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime?            @default(now()) @db.Timestamp(6)
+  hashed_password            String?              @db.VarChar(255)
+  email_verified             Boolean?             @default(false)
+  verification_token         String?              @db.VarChar(255)
+  verification_token_expires DateTime?            @db.Timestamp(6)
+  reset_token                String?              @db.VarChar(255)
+  reset_token_expires        DateTime?            @db.Timestamp(6)
+  profile_picture            String?              @db.VarChar(1000)
   admins                     admins?
   oauth_providers            oauth_providers[]
+  payment_history            payment_history[]
   trading_signals            trading_signals[]
+  user_subscriptions         user_subscriptions[]
 
   @@index([blocked], map: "idx_users_blocked")
   @@index([email], map: "idx_users_email")
   @@index([email_verified], map: "idx_users_email_verified")
   @@index([reset_token], map: "idx_users_reset_token")
   @@index([verification_token], map: "idx_users_verification_token")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model packages {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(100)
+  asset_class        String               @db.VarChar(20)
+  duration_type      String               @db.VarChar(20)
+  billing_cycle      String               @db.VarChar(20)
+  duration_days      Int
+  price              Decimal              @db.Decimal(10, 2)
+  description        String?
+  is_active          Boolean?             @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  payment_history    payment_history[]
+  user_subscriptions user_subscriptions[]
+
+  @@unique([asset_class, duration_type, billing_cycle])
+  @@index([asset_class], map: "idx_packages_asset_class")
+  @@index([billing_cycle], map: "idx_packages_billing_cycle")
+  @@index([duration_type], map: "idx_packages_duration_type")
+  @@index([is_active], map: "idx_packages_is_active")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payment_history {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  package_id     Int
+  amount         Decimal   @db.Decimal(10, 2)
+  payment_method String?   @db.VarChar(50)
+  payment_status String    @db.VarChar(20)
+  transaction_id String?   @db.VarChar(255)
+  metadata       Json?
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  packages       packages  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "idx_payment_history_created_at")
+  @@index([package_id], map: "idx_payment_history_package_id")
+  @@index([payment_status], map: "idx_payment_history_payment_status")
+  @@index([transaction_id], map: "idx_payment_history_transaction_id")
+  @@index([user_id], map: "idx_payment_history_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_subscriptions {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  package_id    Int
+  price_paid    Decimal   @db.Decimal(10, 2)
+  subscribed_at DateTime? @default(now()) @db.Timestamp(6)
+  expires_at    DateTime  @db.Timestamp(6)
+  is_active     Boolean?  @default(true)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  packages      packages  @relation(fields: [package_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_user_subscriptions_expires_at")
+  @@index([is_active], map: "idx_user_subscriptions_is_active")
+  @@index([package_id], map: "idx_user_subscriptions_package_id")
+  @@index([user_id, is_active, expires_at], map: "idx_user_subscriptions_user_active")
+  @@index([user_id], map: "idx_user_subscriptions_user_id")
 }

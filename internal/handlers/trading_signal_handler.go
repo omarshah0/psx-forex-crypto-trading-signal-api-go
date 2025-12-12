@@ -20,8 +20,60 @@ func NewTradingSignalHandler(service *services.TradingSignalService) *TradingSig
 	return &TradingSignalHandler{service: service}
 }
 
-// GetAll retrieves all trading signals
+// GetAll retrieves trading signals visible to the authenticated user
 func (h *TradingSignalHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.SendError(w, http.StatusUnauthorized, utils.ErrorTypeUnauthorized, "Authentication required")
+		return
+	}
+
+	// Parse query parameters
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+
+	limit := 50
+	offset := 0
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil {
+			limit = l
+		}
+	}
+
+	if offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil {
+			offset = o
+		}
+	}
+
+	// Get signals visible to this user based on their subscriptions
+	signals, err := h.service.GetSignalsForUser(userID, limit, offset)
+	if err != nil {
+		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Failed to retrieve trading signals")
+		return
+	}
+
+	// Get total count for this user
+	count, err := h.service.CountForUser(userID)
+	if err != nil {
+		utils.SendError(w, http.StatusInternalServerError, utils.ErrorTypeInternalServer, "Failed to count trading signals")
+		return
+	}
+
+	response := map[string]interface{}{
+		"signals": signals,
+		"total":   count,
+		"limit":   limit,
+		"offset":  offset,
+	}
+
+	utils.SendSuccess(w, http.StatusOK, utils.ResponseTypeCollection, response, "Trading signals retrieved successfully")
+}
+
+// GetAllAdmin retrieves all trading signals (admin only)
+func (h *TradingSignalHandler) GetAllAdmin(w http.ResponseWriter, r *http.Request) {
 	// Parse query parameters
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")

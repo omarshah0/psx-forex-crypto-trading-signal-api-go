@@ -686,6 +686,627 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Packages",
+			"item": [
+				{
+					"name": "Get All Packages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/packages?limit=100&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"packages"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get all active packages available for subscription"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Package by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/packages/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"packages",
+								"1"
+							]
+						},
+						"description": "Get details of a specific package"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Package (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Package\",\n  \"asset_class\": \"FOREX\",\n  \"duration_type\": \"SHORT_TERM\",\n  \"billing_cycle\": \"MONTHLY\",\n  \"duration_days\": 30,\n  \"price\": 10.00,\n  \"description\": \"Test package for Forex short term signals\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/packages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"packages"
+							]
+						},
+						"description": "Create a new package. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Package (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 13.00,\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/packages/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"packages",
+								"1"
+							]
+						},
+						"description": "Update package fields (including price). Admin only. Existing subscriptions keep old price."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Package (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/packages/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"packages",
+								"1"
+							]
+						},
+						"description": "Delete a package. Admin only."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"item": [
+				{
+					"name": "Subscribe to Packages",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"package_ids\": [1, 5, 10]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/subscriptions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"subscriptions"
+							]
+						},
+						"description": "Subscribe to one or more packages. Creates subscriptions and payment records."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Subscriptions",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/subscriptions/active",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"subscriptions",
+								"active"
+							]
+						},
+						"description": "Get all active subscriptions for the authenticated user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Subscription History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/subscriptions/history?limit=50&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"subscriptions",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get all subscriptions (active and expired) for the authenticated user"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Access",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"asset_class\": \"FOREX\",\n  \"duration_type\": \"SHORT_TERM\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/subscriptions/check-access",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"subscriptions",
+								"check-access"
+							]
+						},
+						"description": "Check if user has access to specific asset class and duration type"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "Get Payment History",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/payments/history?limit=50&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get payment history for the authenticated user"
+					},
+					"response": []
+				},
+				{
+					"name": "Record Payment (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": 1,\n  \"package_id\": 1,\n  \"amount\": 10.00,\n  \"payment_method\": \"manual\",\n  \"payment_status\": \"COMPLETED\",\n  \"transaction_id\": \"manual-txn-123\",\n  \"metadata\": {\n    \"note\": \"Manual payment verification\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"payments"
+							]
+						},
+						"description": "Manually record a payment. Admin only."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Trading Signals (Updated)",
+			"item": [
+				{
+					"name": "Get User Signals (Filtered)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/trading-signals?limit=50&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"trading-signals"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get trading signals visible to user based on their subscriptions and free-for-all signals"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Signals (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trading-signals?limit=50&offset=0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"trading-signals"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Get all trading signals without filtering. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"symbol\": \"EURUSD\",\n  \"asset_class\": \"FOREX\",\n  \"duration_type\": \"SHORT_TERM\",\n  \"stop_loss_price\": 1.0850,\n  \"entry_price\": 1.0900,\n  \"take_profit_price\": 1.1000,\n  \"type\": \"LONG\",\n  \"free_for_all\": false,\n  \"comments\": \"Strong bullish momentum on 4H chart\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/trading-signals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"trading-signals"
+							]
+						},
+						"description": "Create a new trading signal. Automatically sends notifications. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"result\": \"WIN\",\n  \"return\": 2.5,\n  \"comments\": \"Target hit successfully\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Update trading signal. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Signal (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/trading-signals/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"trading-signals",
+								"1"
+							]
+						},
+						"description": "Delete a trading signal. Admin only."
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [

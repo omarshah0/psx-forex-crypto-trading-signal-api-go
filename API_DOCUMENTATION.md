@@ -643,6 +643,366 @@ For easier testing, you can import this API into Postman:
 
 ---
 
+---
+
+## Package Endpoints
+
+### GET /api/packages
+Get all active packages available for subscription.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `limit` (integer, optional): Number of results to return (default: 100, max: 100)
+- `offset` (integer, optional): Number of results to skip (default: 0)
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "collection",
+  "data": {
+    "packages": [
+      {
+        "id": 1,
+        "name": "Forex Short Term - Monthly",
+        "asset_class": "FOREX",
+        "duration_type": "SHORT_TERM",
+        "billing_cycle": "MONTHLY",
+        "duration_days": 30,
+        "price": 10.00,
+        "description": "Access to Forex day trading signals for 1 month",
+        "is_active": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "total": 18,
+    "limit": 100,
+    "offset": 0
+  },
+  "message": "Packages retrieved successfully"
+}
+```
+
+### GET /api/packages/{id}
+Get a specific package by ID.
+
+**Authentication:** Required
+
+**Response:** Same as single package object above.
+
+---
+
+## Subscription Endpoints
+
+### POST /api/subscriptions
+Subscribe to one or more packages.
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "package_ids": [1, 5, 10]
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "resource",
+  "data": {
+    "subscriptions": [
+      {
+        "id": 1,
+        "user_id": 123,
+        "package_id": 1,
+        "price_paid": 10.00,
+        "subscribed_at": "2024-01-16T00:00:00Z",
+        "expires_at": "2024-02-15T00:00:00Z",
+        "is_active": true,
+        "created_at": "2024-01-16T00:00:00Z",
+        "updated_at": "2024-01-16T00:00:00Z",
+        "package": {
+          "id": 1,
+          "name": "Forex Short Term - Monthly",
+          "asset_class": "FOREX",
+          "duration_type": "SHORT_TERM",
+          "billing_cycle": "MONTHLY",
+          "duration_days": 30,
+          "price": 10.00
+        }
+      }
+    ],
+    "total_amount": 32.00,
+    "message": "Successfully subscribed to 3 package(s)"
+  },
+  "message": "Successfully subscribed to 3 package(s)"
+}
+```
+
+### GET /api/subscriptions/active
+Get all active subscriptions for the authenticated user.
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "collection",
+  "data": {
+    "subscriptions": [
+      {
+        "id": 1,
+        "user_id": 123,
+        "package_id": 1,
+        "price_paid": 10.00,
+        "subscribed_at": "2024-01-16T00:00:00Z",
+        "expires_at": "2024-02-15T00:00:00Z",
+        "is_active": true,
+        "package": { ... }
+      }
+    ],
+    "total": 3
+  },
+  "message": "Active subscriptions retrieved successfully"
+}
+```
+
+### GET /api/subscriptions/history
+Get all subscriptions (active and expired) for the authenticated user.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `limit` (integer, optional): Number of results to return (default: 50, max: 100)
+- `offset` (integer, optional): Number of results to skip (default: 0)
+
+**Response:** Same structure as active subscriptions with pagination.
+
+### POST /api/subscriptions/check-access
+Check if user has access to specific asset class and duration type.
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "asset_class": "FOREX",
+  "duration_type": "SHORT_TERM"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "resource",
+  "data": {
+    "has_access": true,
+    "expires_at": "2024-02-15T00:00:00Z",
+    "package_id": 1,
+    "price_paid": 10.00
+  },
+  "message": "Access check completed successfully"
+}
+```
+
+---
+
+## Payment Endpoints
+
+### GET /api/payments/history
+Get payment history for the authenticated user.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `limit` (integer, optional): Number of results to return (default: 50, max: 100)
+- `offset` (integer, optional): Number of results to skip (default: 0)
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "collection",
+  "data": {
+    "payments": [
+      {
+        "id": 1,
+        "user_id": 123,
+        "package_id": 1,
+        "amount": 10.00,
+        "payment_method": "dummy",
+        "payment_status": "COMPLETED",
+        "transaction_id": "dummy-123-1705449600",
+        "metadata": "{\"note\": \"Dummy payment for development\"}",
+        "created_at": "2024-01-16T00:00:00Z",
+        "package": {
+          "id": 1,
+          "name": "Forex Short Term - Monthly",
+          "asset_class": "FOREX",
+          "duration_type": "SHORT_TERM"
+        }
+      }
+    ],
+    "total": 5,
+    "limit": 50,
+    "offset": 0
+  },
+  "message": "Payment history retrieved successfully"
+}
+```
+
+---
+
+## Updated Trading Signal Endpoints
+
+### GET /api/trading-signals
+Get trading signals visible to the authenticated user based on their active subscriptions and free-for-all signals.
+
+**Authentication:** Required
+
+**Query Parameters:**
+- `limit` (integer, optional): Number of results to return (default: 50, max: 100)
+- `offset` (integer, optional): Number of results to skip (default: 0)
+
+**Response:**
+```json
+{
+  "status": "success",
+  "type": "collection",
+  "data": {
+    "signals": [
+      {
+        "id": 1,
+        "symbol": "EURUSD",
+        "asset_class": "FOREX",
+        "duration_type": "SHORT_TERM",
+        "stop_loss_price": 1.0850,
+        "entry_price": 1.0900,
+        "take_profit_price": 1.1000,
+        "type": "LONG",
+        "result": null,
+        "return": null,
+        "free_for_all": false,
+        "comments": "Strong bullish momentum on 4H chart",
+        "created_by": 1,
+        "created_at": "2024-01-16T00:00:00Z",
+        "updated_at": "2024-01-16T00:00:00Z"
+      }
+    ],
+    "total": 25,
+    "limit": 50,
+    "offset": 0
+  },
+  "message": "Trading signals retrieved successfully"
+}
+```
+
+**Note:** Users will only see:
+1. Signals marked as `free_for_all: true` (visible to all users)
+2. Signals matching their active subscriptions (asset_class and duration_type)
+
+---
+
+## Admin Endpoints
+
+All admin endpoints require admin privileges. Add `/admin` prefix and use admin authentication.
+
+### GET /api/admin/trading-signals
+Get all trading signals (no filtering).
+
+**Authentication:** Admin Required
+
+**Response:** Same as regular signals endpoint but returns ALL signals.
+
+### POST /api/admin/trading-signals
+Create a new trading signal. Automatically sends notifications to configured channels.
+
+**Authentication:** Admin Required
+
+**Request Body:**
+```json
+{
+  "symbol": "BTCUSDT",
+  "asset_class": "CRYPTO",
+  "duration_type": "LONG_TERM",
+  "stop_loss_price": 42000.50,
+  "entry_price": 43000.00,
+  "take_profit_price": 45000.00,
+  "type": "LONG",
+  "free_for_all": false,
+  "comments": "Bitcoin showing strong support at 42k"
+}
+```
+
+### PUT /api/admin/trading-signals/{id}
+Update a trading signal.
+
+**Authentication:** Admin Required
+
+**Request Body:** Partial update of signal fields.
+
+### DELETE /api/admin/trading-signals/{id}
+Delete a trading signal.
+
+**Authentication:** Admin Required
+
+### POST /api/admin/packages
+Create a new package.
+
+**Authentication:** Admin Required
+
+**Request Body:**
+```json
+{
+  "name": "Forex Short Term - Monthly",
+  "asset_class": "FOREX",
+  "duration_type": "SHORT_TERM",
+  "billing_cycle": "MONTHLY",
+  "duration_days": 30,
+  "price": 10.00,
+  "description": "Access to Forex day trading signals for 1 month"
+}
+```
+
+### PUT /api/admin/packages/{id}
+Update a package (including price changes).
+
+**Authentication:** Admin Required
+
+**Request Body:** Partial update of package fields.
+
+**Note:** Price changes do NOT affect existing active subscriptions.
+
+### DELETE /api/admin/packages/{id}
+Delete a package.
+
+**Authentication:** Admin Required
+
+### POST /api/admin/payments
+Manually record a payment (dummy implementation for development).
+
+**Authentication:** Admin Required
+
+**Request Body:**
+```json
+{
+  "user_id": 123,
+  "package_id": 1,
+  "amount": 10.00,
+  "payment_method": "manual",
+  "payment_status": "COMPLETED",
+  "transaction_id": "manual-txn-123"
+}
+```
+
+---
+
 ## WebSocket Support
 
 Currently, this API does not support WebSocket connections. All communication is done via HTTP REST endpoints. If real-time updates are needed, implement polling on the client side or consider adding WebSocket support in a future version.

@@ -11,14 +11,16 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	OAuth    OAuthConfig
-	Email    EmailConfig
-	Auth     AuthConfig
-	Logging  LoggingConfig
-	Cookie   CookieConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	JWT           JWTConfig
+	OAuth         OAuthConfig
+	Email         EmailConfig
+	Auth          AuthConfig
+	Logging       LoggingConfig
+	Cookie        CookieConfig
+	Notifications NotificationConfig
+	Subscription  SubscriptionConfig
 }
 
 type ServerConfig struct {
@@ -69,9 +71,30 @@ type CookieConfig struct {
 
 type EmailConfig struct {
 	ServiceEnabled bool
+	Provider       string // "resend" or "smtp"
 	FromAddress    string
 	FromName       string
 	FrontendURL    string
+	// Resend
+	ResendAPIKey string
+	// SMTP
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+}
+
+type NotificationConfig struct {
+	TelegramEnabled   bool
+	TelegramBotToken  string
+	TelegramChatID    string
+	DiscordEnabled    bool
+	DiscordWebhookURL string
+	ExpoEnabled       bool
+}
+
+type SubscriptionConfig struct {
+	DefaultExpiryDays int
 }
 
 type AuthConfig struct {
@@ -132,9 +155,26 @@ func Load() (*Config, error) {
 		},
 		Email: EmailConfig{
 			ServiceEnabled: getEnvBool("EMAIL_SERVICE_ENABLED", false),
+			Provider:       getEnv("EMAIL_PROVIDER", "smtp"),
 			FromAddress:    getEnv("EMAIL_FROM_ADDRESS", "noreply@yourapp.com"),
 			FromName:       getEnv("EMAIL_FROM_NAME", "Your App Name"),
 			FrontendURL:    getEnv("FRONTEND_URL", "http://localhost:3000"),
+			ResendAPIKey:   getEnv("RESEND_API_KEY", ""),
+			SMTPHost:       getEnv("SMTP_HOST", ""),
+			SMTPPort:       getEnvInt("SMTP_PORT", 587),
+			SMTPUsername:   getEnv("SMTP_USERNAME", ""),
+			SMTPPassword:   getEnv("SMTP_PASSWORD", ""),
+		},
+		Notifications: NotificationConfig{
+			TelegramEnabled:   getEnvBool("TELEGRAM_NOTIFICATIONS_ENABLED", false),
+			TelegramBotToken:  getEnv("TELEGRAM_BOT_TOKEN", ""),
+			TelegramChatID:    getEnv("TELEGRAM_CHAT_ID", ""),
+			DiscordEnabled:    getEnvBool("DISCORD_NOTIFICATIONS_ENABLED", false),
+			DiscordWebhookURL: getEnv("DISCORD_WEBHOOK_URL", ""),
+			ExpoEnabled:       getEnvBool("EXPO_NOTIFICATIONS_ENABLED", false),
+		},
+		Subscription: SubscriptionConfig{
+			DefaultExpiryDays: getEnvInt("SUBSCRIPTION_DEFAULT_EXPIRY_DAYS", 30),
 		},
 		Auth: AuthConfig{
 			EmailPasswordEnabled:     getEnvBool("EMAIL_PASSWORD_AUTH_ENABLED", false),
