@@ -15,15 +15,15 @@ type RedisDB struct {
 
 // NewRedisDB creates a new Redis connection
 func NewRedisDB(address string, db int) (*RedisDB, error) {
-	// opt, err := redis.ParseURL(address)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
-	// }
+	opt, err := redis.ParseURL(address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Redis URL: %w", err)
+	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:         address,
-		Password:     "",
-		DB:           db,
+		Addr:         opt.Addr,
+		Password:     opt.Password,
+		DB:           opt.DB,
 		DialTimeout:  5 * time.Second,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
