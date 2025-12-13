@@ -1,8 +1,17 @@
 {
-	"devDependencies": {
-		"@types/node": "^24.10.2",
-		"@types/pg": "^8.15.6",
-		"dotenv": "^17.2.3",
-		"prisma": "^7.1.0"
-	}
+  "scripts": {
+    "remove-migrations": "rm -rf prisma/migrations",
+    "prisma-pull": "npx prisma db pull",
+    "create-migration": "mkdir -p prisma/migrations/0_init",
+    "generate-diff": "npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql",
+    "apply-migration": "npx prisma migrate resolve --applied 0_init",
+    "prisma-baseline": "npm run remove-migrations && npm run prisma-pull && npm run create-migration && npm run generate-diff && npm run apply-migration",
+    "start": "node src/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "@types/pg": "^8.15.6",
+    "dotenv": "^17.2.3",
+    "prisma": "^7.1.0"
+  }
 }
