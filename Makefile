@@ -39,7 +39,7 @@ docker-logs: ## View Docker container logs
 
 migrate-up: ## Run database migrations
 	@echo "Running migrations..."
-	@migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/rest_api_db?sslmode=disable" up
+	@migrate -path migrations -database "postgresql://postgres:CYHRFXvXJnKbfTMjSOxQvoFCWqngZyNK@switchback.proxy.rlwy.net:57162/railway" up
 	@echo "Migrations complete"
 
 migrate-down: ## Rollback database migrations
