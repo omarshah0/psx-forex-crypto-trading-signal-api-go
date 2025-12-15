@@ -98,7 +98,7 @@ type SubscriptionConfig struct {
 }
 
 type AuthConfig struct {
-	EmailPasswordEnabled    bool
+	EmailPasswordEnabled     bool
 	RequireEmailVerification bool
 	VerificationTokenExpiry  time.Duration
 	ResetTokenExpiry         time.Duration
@@ -124,7 +124,8 @@ func Load() (*Config, error) {
 		JWT: JWTConfig{
 			AccessSecret:  getEnv("JWT_ACCESS_SECRET", ""),
 			RefreshSecret: getEnv("JWT_REFRESH_SECRET", ""),
-			AccessExpiry:  getEnvDuration("JWT_ACCESS_EXPIRY", 15*time.Minute),
+			// AccessExpiry:  getEnvDuration("JWT_ACCESS_EXPIRY", 15*time.Minute),
+			AccessExpiry:  getEnvDuration("JWT_ACCESS_EXPIRY", 7*24*time.Hour),
 			RefreshExpiry: getEnvDuration("JWT_REFRESH_EXPIRY", 7*24*time.Hour),
 			Issuer:        getEnv("JWT_ISSUER", "rest-api-service"),
 		},
