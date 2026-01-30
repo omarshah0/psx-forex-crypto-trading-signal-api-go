@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,7 +37,8 @@ func main() {
 
 	mongoDB, err := database.NewMongoDB(cfg.Database.MongoDBURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		// log.Fatalf("Failed to connect to MongoDB: %v", err)
+		fmt.Printf("Failed to connect to MongoDB: %v\n", err)
 	}
 	defer mongoDB.Close()
 
@@ -88,12 +90,12 @@ func main() {
 	)
 	authService := services.NewAuthService(userRepo, oauthProviderRepo, adminRepo, jwtService, oauthService, passwordService, emailService)
 	tradingSignalService := services.NewTradingSignalService(tradingSignalRepo, notificationService)
-	
+
 	// New repositories
 	packageRepo := repositories.NewPackageRepository(postgresDB.DB)
 	subscriptionRepo := repositories.NewSubscriptionRepository(postgresDB.DB)
 	paymentRepo := repositories.NewPaymentRepository(postgresDB.DB)
-	
+
 	// New services
 	packageService := services.NewPackageService(packageRepo)
 	subscriptionService := services.NewSubscriptionService(subscriptionRepo, packageRepo, paymentRepo, emailService, userRepo)
