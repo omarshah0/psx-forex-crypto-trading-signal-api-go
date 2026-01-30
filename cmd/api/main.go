@@ -53,7 +53,7 @@ func main() {
 	adminRepo := repositories.NewAdminRepository(postgresDB.DB)
 	oauthProviderRepo := repositories.NewOAuthProviderRepository(postgresDB.DB)
 	tradingSignalRepo := repositories.NewTradingSignalRepository(postgresDB.DB)
-	logRepo := repositories.NewLogRepository(mongoDB.Database)
+	// logRepo := repositories.NewLogRepository(mongoDB.Database)
 
 	// Initialize services
 	jwtService := services.NewJWTService(&cfg.JWT, redisDB)
@@ -104,7 +104,7 @@ func main() {
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	adminMiddleware := middleware.NewAdminMiddleware(adminRepo)
-	loggingMiddleware := middleware.NewLoggingMiddleware(logRepo, cfg.Logging)
+	// loggingMiddleware := middleware.NewLoggingMiddleware(logRepo, cfg.Logging)
 	rateLimitMiddleware := middleware.NewRateLimitMiddleware(redisDB)
 
 	// Initialize handlers
@@ -122,7 +122,7 @@ func main() {
 
 	// Apply global middleware
 	router.Use(middleware.CORS)
-	router.Use(loggingMiddleware.LogRequests)
+	// router.Use(loggingMiddleware.LogRequests)
 	router.Use(rateLimitMiddleware.RateLimit(100)) // 100 requests per minute per IP
 
 	// Enable OPTIONS for all routes (CORS preflight)
